@@ -4,6 +4,7 @@ import DrawingCanvas from './DrawingCanvas';
 import { socket } from './socket';
 
 type AnswerFeedback = { correct: boolean; nonce: number } | null;
+type MascotPopup = { id: number; src: string; left: number; top: number; size: number; flip: boolean; delay: number };
 
 const grades: Array<{ value: GradeKey; label: string }> = [
   { value: 'grade1', label: 'Grade 1' },
@@ -15,6 +16,70 @@ const grades: Array<{ value: GradeKey; label: string }> = [
   { value: 'juniorHigh', label: 'Junior High and above' },
   { value: 'advanced', label: 'AP Japanese / Advanced Learners' }
 ];
+
+const mascotImages = [
+  '/mascots/mascot-chibi-black.png',
+  '/mascots/mascot-chibi-brown.png',
+  '/mascots/mascot-chibi-blue.png',
+  '/mascots/mascot-chibi-white.png',
+  '/mascots/mascot-chibi-cream.png',
+  '/mascots/mascot-portrait-blonde.png'
+];
+
+function randomMascot(id: number): MascotPopup {
+  return {
+    id,
+    src: mascotImages[Math.floor(Math.random() * mascotImages.length)],
+    left: 4 + Math.random() * 82,
+    top: 8 + Math.random() * 72,
+    size: 78 + Math.random() * 54,
+    flip: Math.random() > 0.5,
+    delay: Math.random() * 0.35
+  };
+}
+
+function MascotPopups() {
+  const [popups, setPopups] = useState<MascotPopup[]>([]);
+
+  useEffect(() => {
+    let nextId = 1;
+    const showMascot = () => {
+      const id = nextId;
+      nextId += 1;
+      setPopups((current) => [...current.slice(-2), randomMascot(id)]);
+      window.setTimeout(() => {
+        setPopups((current) => current.filter((popup) => popup.id !== id));
+      }, 6200);
+    };
+
+    const firstTimer = window.setTimeout(showMascot, 900);
+    const interval = window.setInterval(showMascot, 5200);
+    return () => {
+      window.clearTimeout(firstTimer);
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <div className="mascot-layer" aria-hidden="true">
+      {popups.map((popup) => (
+        <img
+          key={popup.id}
+          className="mascot-popup"
+          src={popup.src}
+          alt=""
+          style={{
+            left: `${popup.left}%`,
+            top: `${popup.top}%`,
+            width: `${popup.size}px`,
+            animationDelay: `${popup.delay}s`,
+            ['--mascot-flip' as string]: popup.flip ? -1 : 1
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 function playFeedbackSound(correct: boolean) {
   try {
@@ -122,6 +187,7 @@ export default function App() {
   if (!view) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-yuzu/50 via-white to-sora/40 p-4 text-sumi">
+        <MascotPopups />
         <section className="mx-auto flex min-h-screen max-w-5xl items-center justify-center">
           <div className="grid w-full gap-6 rounded-[2rem] bg-white/90 p-6 shadow-soft md:grid-cols-[1.1fr_0.9fr] md:p-10">
             <div className="flex flex-col justify-center">
@@ -156,6 +222,7 @@ export default function App() {
   if (view.phase === 'results') {
     return (
       <main className="min-h-screen bg-gradient-to-br from-yuzu/40 via-white to-sakura/20 p-4 text-sumi">
+        <MascotPopups />
         <section className="mx-auto max-w-4xl py-10">
           <h1 className="text-center text-5xl font-black">Final Results</h1>
           <div className="mt-8 grid gap-3">
@@ -175,6 +242,7 @@ export default function App() {
   if (view.phase === 'lobby') {
     return (
       <main className="min-h-screen bg-gradient-to-br from-sora/30 via-white to-yuzu/40 p-4 text-sumi">
+        <MascotPopups />
         <section className="mx-auto grid max-w-6xl gap-5 py-6 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="panel">
             <h1 className="text-4xl font-black">Lobby</h1>
@@ -236,6 +304,7 @@ export default function App() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-sora/25 via-white to-yuzu/30 p-3 text-sumi">
+      <MascotPopups />
       {answerFeedback && (
         <div key={answerFeedback.nonce} className={`feedback-overlay ${answerFeedback.correct ? 'feedback-correct' : 'feedback-wrong'}`} aria-live="polite">
           <div className={answerFeedback.correct ? 'sparkle-burst' : 'wrong-burst'}>{answerFeedback.correct ? '✨' : '×'}</div>
