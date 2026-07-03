@@ -1,4 +1,4 @@
-﻿import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const dataPath = existsSync(join(process.cwd(), 'server/data/kanjiData.json'))
@@ -28,6 +28,10 @@ export function getEntriesForSettings(settings) {
   });
 }
 
+export function allKnownEntries() {
+  return Object.values(kanjiData).flat();
+}
+
 export function allKnownKanji() {
-  return Array.from(new Set(Object.values(kanjiData).flat().map((entry) => entry.kanji)));
+  return Array.from(new Set(allKnownEntries().map((entry) => entry.kanji)));
 }

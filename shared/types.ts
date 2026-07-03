@@ -48,6 +48,7 @@ export interface PublicTurn {
   promptType: 'reading' | 'meaning';
   prompt?: string;
   answer?: string;
+  correctChoice?: string;
   statusMessage: string;
   choices?: string[];
   secondsLeft: number;

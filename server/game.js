@@ -1,4 +1,4 @@
-﻿import { allKnownKanji, getEntriesForSettings } from './kanji.js';
+import { allKnownEntries, getEntriesForSettings } from './kanji.js';
 
 const rooms = new Map();
 const playerRooms = new Map();
@@ -31,22 +31,39 @@ function choiceCount(player, room) {
   return 4;
 }
 
-function choicesFor(player, entry, room) {
+function choiceText(entry, promptType) {
+  const values = promptType === 'reading' ? entry.reading : entry.meaning;
+  return values?.[0] ?? entry.kanji;
+}
+
+function choicesFor(player, entry, room, promptType, correctChoice) {
   const needed = choiceCount(player, room);
-  const pool = Array.from(new Set([...entry.distractors, ...room.entries.map((e) => e.kanji), ...allKnownKanji()])).filter((k) => k !== entry.kanji);
-  return shuffle([entry.kanji, ...shuffle(pool).slice(0, Math.max(0, needed - 1))]);
+  const knownEntries = [...room.entries, ...allKnownEntries()];
+  for (const kanji of entry.distractors ?? []) {
+    const match = room.entries.find((candidate) => candidate.kanji === kanji);
+    if (match) knownEntries.push(match);
+  }
+  const pool = Array.from(new Set(
+    knownEntries
+      .filter((candidate) => candidate.kanji !== entry.kanji)
+      .map((candidate) => choiceText(candidate, promptType))
+      .filter((choice) => choice && choice !== correctChoice)
+  ));
+  return shuffle([correctChoice, ...shuffle(pool).slice(0, Math.max(0, needed - 1))]);
 }
 
 function makeView(room, socketId) {
   const you = room.players.find((p) => p.id === socketId);
   const isDrawer = room.turn?.drawerId === socketId;
+  const hintAvailable = room.turn ? room.turn.secondsLeft <= Math.max(0, room.settings.turnSeconds - 10) : false;
   const turn = room.turn ? {
     round: room.turn.round,
     drawerId: room.turn.drawerId,
     drawerName: room.players.find((p) => p.id === room.turn?.drawerId)?.name ?? 'お題担当',
     promptType: room.turn.promptType,
     prompt: isDrawer ? room.turn.prompt : undefined,
-    answer: room.phase === 'turn-reveal' || room.phase === 'results' || isDrawer ? room.turn.answer : undefined,
+    answer: room.phase === 'turn-reveal' || room.phase === 'results' || (isDrawer && hintAvailable) ? room.turn.answer : undefined,
+    correctChoice: room.phase === 'turn-reveal' || room.phase === 'results' ? room.turn.correctChoice : undefined,
     statusMessage: room.turn.statusMessage,
     choices: !isDrawer && you ? room.turn.choicesByPlayer[socketId] : undefined,
     secondsLeft: room.turn.secondsLeft
@@ -83,11 +100,12 @@ function startTurn(io, room, drawerId) {
   const allowed = entry.promptTypes?.length ? entry.promptTypes : ['reading', 'meaning'];
   const promptType = room.settings.promptMode === 'random' ? pick(allowed) : room.settings.promptMode;
   const prompt = promptType === 'reading' ? pick(entry.reading) : pick(entry.meaning);
+  const correctChoice = prompt;
   const nextRound = room.turn ? room.turn.round + 1 : 1;
 
   room.phase = 'playing';
-  room.turn = { round: nextRound, drawerId: drawer.id, entry, promptType, prompt, answer: entry.kanji, answered: new Set(), statusMessage: 'お題担当が漢字を書いています', secondsLeft: room.settings.turnSeconds, choicesByPlayer: {} };
-  for (const player of room.players) if (player.id !== drawer.id) room.turn.choicesByPlayer[player.id] = choicesFor(player, entry, room);
+  room.turn = { round: nextRound, drawerId: drawer.id, entry, promptType, prompt, correctChoice, answer: entry.kanji, answered: new Set(), statusMessage: 'お題担当が漢字を書いています', secondsLeft: room.settings.turnSeconds, choicesByPlayer: {} };
+  for (const player of room.players) if (player.id !== drawer.id) room.turn.choicesByPlayer[player.id] = choicesFor(player, entry, room, promptType, correctChoice);
 
   io.to(room.roomCode).emit('canvas:clear');
   room.turn.timer = setInterval(() => {
@@ -200,7 +218,7 @@ export function registerGameHandlers(io, socket) {
     const player = room.players.find((p) => p.id === socket.id);
     if (!player || room.turn.firstCorrectId) return;
     room.turn.answered.add(socket.id);
-    if (choice === room.turn.answer) finishTurn(io, room, socket.id);
+    if (choice === room.turn.correctChoice) finishTurn(io, room, socket.id);
     else {
       player.wrongCount += 1;
       room.turn.statusMessage = player.name + 'さん、もう一度考えてみよう';
