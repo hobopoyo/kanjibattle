@@ -1,0 +1,17 @@
+﻿{
+  "name": "kanji-draw-battle",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm install --prefix client && npm run build --prefix client",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

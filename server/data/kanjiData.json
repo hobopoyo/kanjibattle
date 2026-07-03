@@ -1,0 +1,18 @@
+{
+  "grade1": [
+    {"kanji":"山","reading":["やま","サン"],"meaning":["mountain"],"grade":1,"onyomi":["サン"],"kunyomi":["やま"],"promptTypes":["reading","meaning"],"distractors":["川","森","田","日"]},
+    {"kanji":"森","reading":["もり","シン"],"meaning":["forest","woods"],"grade":1,"onyomi":["シン"],"kunyomi":["もり"],"promptTypes":["reading","meaning"],"distractors":["林","木","山","草"]},
+    {"kanji":"川","reading":["かわ","セン"],"meaning":["river"],"grade":1,"onyomi":["セン"],"kunyomi":["かわ"],"promptTypes":["reading","meaning"],"distractors":["山","水","火","田"]},
+    {"kanji":"水","reading":["みず","スイ"],"meaning":["water"],"grade":1,"onyomi":["スイ"],"kunyomi":["みず"],"promptTypes":["reading","meaning"],"distractors":["火","川","雨","木"]},
+    {"kanji":"火","reading":["ひ","カ"],"meaning":["fire"],"grade":1,"onyomi":["カ"],"kunyomi":["ひ"],"promptTypes":["reading","meaning"],"distractors":["水","日","木","土"]},
+    {"kanji":"日","reading":["ひ","にち","ニチ"],"meaning":["sun","day"],"grade":1,"onyomi":["ニチ"],"kunyomi":["ひ"],"promptTypes":["reading","meaning"],"distractors":["月","火","目","白"]},
+    {"kanji":"月","reading":["つき","ゲツ"],"meaning":["moon","month"],"grade":1,"onyomi":["ゲツ"],"kunyomi":["つき"],"promptTypes":["reading","meaning"],"distractors":["日","目","円","白"]},
+    {"kanji":"木","reading":["き","モク"],"meaning":["tree","wood"],"grade":1,"onyomi":["モク"],"kunyomi":["き"],"promptTypes":["reading","meaning"],"distractors":["林","森","本","水"]}
+  ],
+  "grade2": [
+    {"kanji":"春","reading":["はる","シュン"],"meaning":["spring"],"grade":2,"onyomi":["シュン"],"kunyomi":["はる"],"promptTypes":["reading","meaning"],"distractors":["夏","秋","冬","朝"]},
+    {"kanji":"夏","reading":["なつ","カ"],"meaning":["summer"],"grade":2,"onyomi":["カ"],"kunyomi":["なつ"],"promptTypes":["reading","meaning"],"distractors":["春","秋","冬","夜"]},
+    {"kanji":"行","reading":["いく","コウ"],"meaning":["go"],"grade":2,"onyomi":["コウ"],"kunyomi":["いく"],"promptTypes":["reading","meaning"],"distractors":["来","帰","走","歩"]}
+  ],
+  "grade3": [], "grade4": [], "grade5": [], "grade6": [], "juniorHigh": [], "advanced": [], "custom": []
+}

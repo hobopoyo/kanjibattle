@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { font-family: ui-rounded, 'Hiragino Maru Gothic ProN', 'Yu Gothic', system-ui, sans-serif; }
+body { margin: 0; }
+button, input, select, textarea { font: inherit; }
+button:disabled, fieldset:disabled { opacity: 0.55; cursor: not-allowed; }
+.panel { @apply rounded-3xl bg-white/90 p-5 shadow-soft md:p-7; }
+.label { @apply mb-2 block text-sm font-black text-slate-600; }
+.input { @apply w-full rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 text-lg font-bold outline-none transition focus:border-sora; }
+.primary-button { @apply rounded-2xl bg-sakura px-6 py-4 text-xl font-black text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-rose-500; }
+.secondary-button { @apply rounded-2xl bg-sumi px-6 py-4 text-xl font-black text-white shadow-soft transition hover:-translate-y-0.5; }
+.tool-button { @apply rounded-2xl bg-slate-100 px-4 py-2 font-black text-slate-700 transition hover:bg-yuzu/50 disabled:hover:bg-slate-100; }
+.tool-active { @apply bg-sakura text-white hover:bg-sakura; }
+.choice-button { @apply rounded-3xl bg-white p-5 text-4xl font-black shadow-soft ring-4 ring-sora/30 transition hover:-translate-y-1 hover:bg-yuzu/40; }
+.meta { @apply text-xs font-black uppercase tracking-wide text-slate-400; }
+.status-text { @apply mt-1 text-xl font-black; }
