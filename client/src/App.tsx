@@ -59,8 +59,12 @@ export default function App() {
   const [view, setView] = useState<RoomView | null>(null);
   const [error, setError] = useState('');
   const [answerFeedback, setAnswerFeedback] = useState<AnswerFeedback>(null);
+  const [copyStatus, setCopyStatus] = useState('');
 
   useEffect(() => {
+    const invitedRoom = new URLSearchParams(window.location.search).get('room');
+    if (invitedRoom) setRoomCodeInput(invitedRoom.toUpperCase());
+
     const onAnswerResult = (payload: { correct: boolean }) => {
       setAnswerFeedback({ correct: payload.correct, nonce: Date.now() });
       playFeedbackSound(payload.correct);
@@ -79,6 +83,31 @@ export default function App() {
 
   const sortedPlayers = useMemo(() => [...(view?.players ?? [])].sort((a, b) => b.score - a.score), [view?.players]);
   const updateSettings = (patch: Partial<GameSettings>) => socket.emit('settings:update', patch);
+  const inviteLink = view ? `${window.location.origin}${window.location.pathname}?room=${view.roomCode}` : '';
+  const qrCodeUrl = inviteLink ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=${encodeURIComponent(inviteLink)}` : '';
+  const shareText = view ? `Join my Kanji Draw Battle room: ${view.roomCode}` : '';
+  const twitterShareUrl = inviteLink ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(inviteLink)}` : '';
+  const copyInviteLink = async () => {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopyStatus('Link copied!');
+    } catch {
+      setCopyStatus(inviteLink);
+    }
+  };
+  const shareInviteLink = async () => {
+    if (!inviteLink) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Kanji Draw Battle', text: shareText, url: inviteLink });
+        return;
+      }
+      await copyInviteLink();
+    } catch {
+      await copyInviteLink();
+    }
+  };
 
   if (!view) {
     return (
@@ -133,14 +162,27 @@ export default function App() {
             <h1 className="text-4xl font-black">Lobby</h1>
             <p className="mt-3 text-lg font-bold text-slate-600">Room Code</p>
             <div className="mt-2 rounded-3xl bg-sumi p-5 text-center text-5xl font-black tracking-[0.2em] text-white">{view.roomCode}</div>
+            <div className="mt-4 grid gap-4 rounded-3xl bg-sora/15 p-4 md:grid-cols-[180px_1fr]">
+              <img className="mx-auto rounded-2xl bg-white p-2 shadow-soft" src={qrCodeUrl} alt={`QR code for room ${view.roomCode}`} width="180" height="180" />
+              <div className="flex min-w-0 flex-col justify-center gap-3">
+                <p className="text-lg font-black">Invite Link</p>
+                <p className="break-all rounded-2xl bg-white p-3 text-sm font-bold text-slate-600">{inviteLink}</p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <button className="secondary-button text-base" onClick={copyInviteLink}>Copy Link</button>
+                  <button className="primary-button text-base" onClick={shareInviteLink}>Share</button>
+                  <a className="secondary-button text-center text-base" href={twitterShareUrl} target="_blank" rel="noreferrer">X / Twitter</a>
+                </div>
+                {copyStatus && <p className="rounded-xl bg-matcha/10 p-2 text-sm font-black text-matcha">{copyStatus}</p>}
+              </div>
+            </div>
             <h2 className="mt-6 text-2xl font-black">Players</h2>
             <p className="mt-1 text-sm font-black text-slate-500">{view.players.length} / 8 players</p>
+            <p className="mt-1 text-sm font-black text-slate-500">The game starts automatically when the room reaches 8 players.</p>
             <div className="mt-3 grid gap-2">{view.players.map((p) => <div key={p.id} className="rounded-2xl bg-yuzu/30 px-4 py-3 font-black">{p.name}{p.isHost ? ' (Host)' : ''}</div>)}</div>
           </div>
 
-          <div className="panel">
+          {view.you?.isHost ? <div className="panel">
             <h2 className="text-3xl font-black">Game Settings</h2>
-            {!view.you?.isHost && <p className="mt-3 rounded-2xl bg-sora/20 p-3 font-bold">The host is choosing the settings.</p>}
             <fieldset disabled={!view.you?.isHost} className="mt-5 grid gap-4">
               <label className="label">Question Mode</label>
               <select className="input" value={view.settings.mode} onChange={(e) => updateSettings({ mode: e.target.value as GameSettings['mode'] })}>
@@ -160,7 +202,11 @@ export default function App() {
             </fieldset>
             <p className="mt-4 font-bold text-slate-600">Available kanji: {view.kanjiCount}</p>
             {view.you?.isHost && <button className="primary-button mt-5 w-full" disabled={!view.canStart} onClick={() => socket.emit('game:start')}>{view.canStart ? 'Start Game' : 'Need 2+ players and kanji'}</button>}
-          </div>
+          </div> : <div className="panel flex min-h-[360px] flex-col justify-center text-center">
+            <h2 className="text-3xl font-black">Waiting for the host</h2>
+            <p className="mt-4 text-lg font-bold leading-8 text-slate-600">You are in the room. The host is choosing the game settings.</p>
+            <p className="mt-4 rounded-2xl bg-yuzu/30 p-4 font-black">Players: {view.players.length} / 8</p>
+          </div>}
         </section>
       </main>
     );

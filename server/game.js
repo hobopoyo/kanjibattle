@@ -132,7 +132,20 @@ function nextDrawer(room, winnerId) {
   return room.players[room.drawerIndex]?.id;
 }
 
-function finishTurn(io, room, winnerId) {
+function resetScores(room) {
+  for (const player of room.players) Object.assign(player, { score: 0, correctCount: 0, wrongCount: 0, roundsWithoutCorrect: 0 });
+}
+
+function startGame(io, room) {
+  room.entries = getEntriesForSettings(room.settings);
+  if (room.players.length < 2 || room.entries.length === 0) return emitRoom(io, room);
+  resetScores(room);
+  room.drawerIndex = 0;
+  room.turn = undefined;
+  startTurn(io, room);
+}
+
+function finishTurn(io, room, winnerId, options = {}) {
   if (!room.turn || room.phase !== 'playing') return;
   clearTimer(room);
   const drawer = room.players.find((p) => p.id === room.turn?.drawerId);
@@ -145,6 +158,8 @@ function finishTurn(io, room, winnerId) {
     drawer.score += 1;
     room.turn.statusMessage = winner.name + ' answered correctly!';
     room.turn.firstCorrectId = winner.id;
+  } else if (options.statusMessage) {
+    room.turn.statusMessage = options.statusMessage;
   } else {
     room.turn.statusMessage = 'Time is up! The answer was ' + room.turn.answer + '.';
   }
@@ -160,7 +175,7 @@ function finishTurn(io, room, winnerId) {
       emitRoom(io, room);
       return;
     }
-    startTurn(io, room, nextDrawer(room, winner?.id));
+    startTurn(io, room, options.nextDrawerId ?? nextDrawer(room, winner?.id));
   }, 3000);
 }
 
@@ -185,6 +200,7 @@ export function registerGameHandlers(io, socket) {
     playerRooms.set(socket.id, room.roomCode);
     socket.join(room.roomCode);
     emitRoom(io, room);
+    if (room.players.length === maxPlayersPerRoom && getEntriesForSettings(room.settings).length > 0) startGame(io, room);
   });
 
   socket.on('settings:update', (settings) => {
@@ -202,12 +218,7 @@ export function registerGameHandlers(io, socket) {
   socket.on('game:start', () => {
     const room = rooms.get(playerRooms.get(socket.id) ?? '');
     if (!room || room.hostId !== socket.id) return;
-    room.entries = getEntriesForSettings(room.settings);
-    if (room.players.length < 2 || room.entries.length === 0) return emitRoom(io, room);
-    for (const player of room.players) Object.assign(player, { score: 0, correctCount: 0, wrongCount: 0, roundsWithoutCorrect: 0 });
-    room.drawerIndex = 0;
-    room.turn = undefined;
-    startTurn(io, room);
+    startGame(io, room);
   });
 
   socket.on('draw:stroke', (payload) => {
@@ -237,6 +248,12 @@ export function registerGameHandlers(io, socket) {
       player.wrongCount += 1;
       room.turn.statusMessage = player.name + ' is out for this turn.';
       socket.emit('answer:result', { correct: false, choice, answer: room.turn.answer, correctChoice: room.turn.correctChoice });
+      const remainingAnswerers = room.players.filter((p) => p.connected && p.id !== room.turn.drawerId && !room.turn.answered.has(p.id));
+      if (remainingAnswerers.length === 0) {
+        const nextDrawerId = room.players.length === 2 ? room.turn.drawerId : undefined;
+        finishTurn(io, room, undefined, { nextDrawerId, statusMessage: 'All answerers missed. The answer was ' + room.turn.answer + '.' });
+        return;
+      }
       emitRoom(io, room);
     }
   });
