@@ -6,7 +6,7 @@ const playerRooms = new Map();
 const defaultSettings = {
   mode: 'grade',
   grade: 'grade1',
-  customKanjiInput: '森, 林, 川, 山, 火, 水',
+  customKanjiInput: '\u68ee, \u6797, \u5ddd, \u5c71, \u706b, \u6c34',
   promptMode: 'random',
   roundLimit: 6,
   turnSeconds: 60,
@@ -59,7 +59,7 @@ function makeView(room, socketId) {
   const turn = room.turn ? {
     round: room.turn.round,
     drawerId: room.turn.drawerId,
-    drawerName: room.players.find((p) => p.id === room.turn?.drawerId)?.name ?? 'お題担当',
+    drawerName: room.players.find((p) => p.id === room.turn?.drawerId)?.name ?? 'Drawer',
     promptType: room.turn.promptType,
     prompt: isDrawer ? room.turn.prompt : undefined,
     answer: room.phase === 'turn-reveal' || room.phase === 'results' || (isDrawer && hintAvailable) ? room.turn.answer : undefined,
@@ -104,7 +104,7 @@ function startTurn(io, room, drawerId) {
   const nextRound = room.turn ? room.turn.round + 1 : 1;
 
   room.phase = 'playing';
-  room.turn = { round: nextRound, drawerId: drawer.id, entry, promptType, prompt, correctChoice, answer: entry.kanji, answered: new Set(), statusMessage: 'お題担当が漢字を書いています', secondsLeft: room.settings.turnSeconds, choicesByPlayer: {} };
+  room.turn = { round: nextRound, drawerId: drawer.id, entry, promptType, prompt, correctChoice, answer: entry.kanji, answered: new Set(), statusMessage: 'The drawer is writing the kanji.', secondsLeft: room.settings.turnSeconds, choicesByPlayer: {} };
   for (const player of room.players) if (player.id !== drawer.id) room.turn.choicesByPlayer[player.id] = choicesFor(player, entry, room, promptType, correctChoice);
 
   io.to(room.roomCode).emit('canvas:clear');
@@ -134,10 +134,10 @@ function finishTurn(io, room, winnerId) {
     winner.correctCount += 1;
     winner.roundsWithoutCorrect = 0;
     drawer.score += 1;
-    room.turn.statusMessage = winner.name + 'さん正解！';
+    room.turn.statusMessage = winner.name + ' answered correctly!';
     room.turn.firstCorrectId = winner.id;
   } else {
-    room.turn.statusMessage = '時間切れ！正解は「' + room.turn.answer + '」';
+    room.turn.statusMessage = 'Time is up! The answer was ' + room.turn.answer + '.';
   }
 
   for (const player of room.players) if (!winner || player.id !== winner.id) player.roundsWithoutCorrect += 1;
@@ -168,8 +168,8 @@ export function registerGameHandlers(io, socket) {
 
   socket.on('room:join', ({ name, roomCode }) => {
     const room = rooms.get(roomCode?.trim().toUpperCase());
-    if (!room) return socket.emit('app:error', 'ルームが見つかりません');
-    if (room.phase !== 'lobby') return socket.emit('app:error', 'ゲーム開始後の参加はまだ対応していません');
+    if (!room) return socket.emit('app:error', 'Room not found.');
+    if (room.phase !== 'lobby') return socket.emit('app:error', 'This game has already started. Please join the next round.');
     const player = { id: socket.id, name: name?.trim() || 'Player', isHost: false, connected: true, score: 0, correctCount: 0, wrongCount: 0, roundsWithoutCorrect: 0 };
     room.players.push(player);
     playerRooms.set(socket.id, room.roomCode);
@@ -221,7 +221,7 @@ export function registerGameHandlers(io, socket) {
     if (choice === room.turn.correctChoice) finishTurn(io, room, socket.id);
     else {
       player.wrongCount += 1;
-      room.turn.statusMessage = player.name + 'さん、もう一度考えてみよう';
+      room.turn.statusMessage = player.name + ', try again!';
       emitRoom(io, room);
     }
   });

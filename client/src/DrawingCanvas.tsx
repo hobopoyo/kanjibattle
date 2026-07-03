@@ -94,12 +94,12 @@ export default function DrawingCanvas({ canDraw, phase }: Props) {
   return (
     <div className="rounded-[2rem] bg-white p-3 shadow-soft ring-4 ring-white/70">
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <button className={'tool-button ' + (mode === 'pen' ? 'tool-active' : '')} onClick={() => setMode('pen')} disabled={!canDraw}>ペン</button>
-        <button className={'tool-button ' + (mode === 'eraser' ? 'tool-active' : '')} onClick={() => setMode('eraser')} disabled={!canDraw}>消しゴム</button>
-        <label className="flex items-center gap-2 text-sm font-bold text-slate-600">太さ
+        <button className={'tool-button ' + (mode === 'pen' ? 'tool-active' : '')} onClick={() => setMode('pen')} disabled={!canDraw}>Pen</button>
+        <button className={'tool-button ' + (mode === 'eraser' ? 'tool-active' : '')} onClick={() => setMode('eraser')} disabled={!canDraw}>Eraser</button>
+        <label className="flex items-center gap-2 text-sm font-bold text-slate-600">Size
           <input type="range" min="4" max="28" value={width} onChange={(e) => setWidth(Number(e.target.value))} disabled={!canDraw} />
         </label>
-        <button className="tool-button bg-rose-100 text-rose-700" onClick={clear} disabled={!canDraw}>全消し</button>
+        <button className="tool-button bg-rose-100 text-rose-700" onClick={clear} disabled={!canDraw}>Clear</button>
       </div>
       <canvas
         ref={canvasRef}

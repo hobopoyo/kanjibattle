@@ -7,7 +7,7 @@ const dataPath = existsSync(join(process.cwd(), 'server/data/kanjiData.json'))
 const kanjiData = JSON.parse(readFileSync(dataPath, 'utf8'));
 
 export function parseCustomKanji(input = '') {
-  return Array.from(new Set(input.split(/[\s,、，]+/).map((item) => item.trim()).filter(Boolean)));
+  return Array.from(new Set(input.split(/[\\s,\\u3001\\uff0c]+/).map((item) => item.trim()).filter(Boolean)));
 }
 
 export function getEntriesForSettings(settings) {
@@ -17,8 +17,8 @@ export function getEntriesForSettings(settings) {
     const known = Object.values(kanjiData).flat().find((entry) => entry.kanji === kanji);
     return known ?? {
       kanji,
-      reading: ['未登録'],
-      meaning: ['先生指定漢字'],
+      reading: ['Unknown'],
+      meaning: ['Teacher custom kanji'],
       grade: 'custom',
       onyomi: [],
       kunyomi: [],
