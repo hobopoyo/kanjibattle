@@ -60,6 +60,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [answerFeedback, setAnswerFeedback] = useState<AnswerFeedback>(null);
   const [copyStatus, setCopyStatus] = useState('');
+  const [joinNameStep, setJoinNameStep] = useState(false);
 
   useEffect(() => {
     const invitedRoom = new URLSearchParams(window.location.search).get('room');
@@ -108,6 +109,15 @@ export default function App() {
       await copyInviteLink();
     }
   };
+  const prepareJoin = () => {
+    if (!roomCodeInput.trim()) {
+      setError('Please enter a room code.');
+      return;
+    }
+    setError('');
+    setJoinNameStep(true);
+  };
+  const submitJoin = () => socket.emit('room:join', { name, roomCode: roomCodeInput });
 
   if (!view) {
     return (
@@ -120,13 +130,21 @@ export default function App() {
               <p className="mt-5 text-lg font-bold leading-8 text-slate-600">One player sees a reading or English meaning, writes the matching kanji, and everyone else chooses the correct reading or meaning.</p>
             </div>
             <div className="rounded-[1.5rem] bg-sora/20 p-5">
-              <label className="label">Name</label>
-              <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Example: Aoi" />
-              <button className="primary-button mt-4 w-full" onClick={() => socket.emit('room:create', { name })}>Create Room</button>
-              <div className="my-5 h-px bg-slate-200" />
-              <label className="label">Room Code</label>
-              <input className="input uppercase" value={roomCodeInput} onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())} placeholder="ABCDE" />
-              <button className="secondary-button mt-4 w-full" onClick={() => socket.emit('room:join', { name, roomCode: roomCodeInput })}>Join Room</button>
+              {!joinNameStep ? <>
+                <label className="label">Name for hosting</label>
+                <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Example: Aoi" />
+                <button className="primary-button mt-4 w-full" onClick={() => socket.emit('room:create', { name })}>Create Room</button>
+                <div className="my-5 h-px bg-slate-200" />
+                <label className="label">Room Code</label>
+                <input className="input uppercase" value={roomCodeInput} onChange={(e) => { setRoomCodeInput(e.target.value.toUpperCase()); setJoinNameStep(false); }} placeholder="ABCDE" />
+                <button className="secondary-button mt-4 w-full" onClick={prepareJoin}>Join Room</button>
+              </> : <>
+                <p className="rounded-2xl bg-white p-3 text-center text-xl font-black tracking-[0.12em] text-sumi">{roomCodeInput}</p>
+                <label className="label mt-5">Your Name</label>
+                <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Example: Aoi" autoFocus />
+                <button className="primary-button mt-4 w-full" onClick={submitJoin}>Enter Room</button>
+                <button className="tool-button mt-3 w-full" onClick={() => setJoinNameStep(false)}>Change Room Code</button>
+              </>}
               {error && <p className="mt-4 rounded-xl bg-red-100 p-3 font-bold text-red-700">{error}</p>}
             </div>
           </div>
