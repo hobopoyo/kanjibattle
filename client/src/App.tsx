@@ -3,6 +3,8 @@ import type { GameSettings, GradeKey, RoomView } from '@shared/types';
 import DrawingCanvas from './DrawingCanvas';
 import { socket } from './socket';
 
+type AnswerFeedback = { correct: boolean; nonce: number } | null;
+
 const grades: Array<{ value: GradeKey; label: string }> = [
   { value: 'grade1', label: 'Grade 1' },
   { value: 'grade2', label: 'Grade 2' },
@@ -14,18 +16,60 @@ const grades: Array<{ value: GradeKey; label: string }> = [
   { value: 'advanced', label: 'AP Japanese / Advanced Learners' }
 ];
 
+function playFeedbackSound(correct: boolean) {
+  try {
+    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const context = new AudioContextClass();
+    const now = context.currentTime;
+    const play = (frequency: number, start: number, duration: number, type: OscillatorType = 'sine', volume = 0.1) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, now + start);
+      gain.gain.setValueAtTime(0.0001, now + start);
+      gain.gain.exponentialRampToValueAtTime(volume, now + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(now + start);
+      oscillator.stop(now + start + duration + 0.03);
+    };
+
+    if (correct) {
+      play(880, 0, 0.13, 'sine', 0.12);
+      play(1320, 0.14, 0.16, 'sine', 0.1);
+    } else {
+      play(180, 0, 0.16, 'square', 0.08);
+      play(120, 0.18, 0.2, 'square', 0.07);
+    }
+    window.setTimeout(() => void context.close(), 700);
+  } catch {
+    // Some browsers block Web Audio until the player interacts. The visual feedback still works.
+  }
+}
+
 export default function App() {
   const [name, setName] = useState('');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [view, setView] = useState<RoomView | null>(null);
   const [error, setError] = useState('');
+  const [answerFeedback, setAnswerFeedback] = useState<AnswerFeedback>(null);
 
   useEffect(() => {
+    const onAnswerResult = (payload: { correct: boolean }) => {
+      setAnswerFeedback({ correct: payload.correct, nonce: Date.now() });
+      playFeedbackSound(payload.correct);
+      window.setTimeout(() => setAnswerFeedback(null), payload.correct ? 1100 : 750);
+    };
+
     socket.on('game:state', setView);
     socket.on('app:error', setError);
+    socket.on('answer:result', onAnswerResult);
     return () => {
       socket.off('game:state', setView);
       socket.off('app:error', setError);
+      socket.off('answer:result', onAnswerResult);
     };
   }, []);
 
@@ -122,6 +166,11 @@ export default function App() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-sora/25 via-white to-yuzu/30 p-3 text-sumi">
+      {answerFeedback && (
+        <div key={answerFeedback.nonce} className={`feedback-overlay ${answerFeedback.correct ? 'feedback-correct' : 'feedback-wrong'}`} aria-live="polite">
+          <div className={answerFeedback.correct ? 'sparkle-burst' : 'wrong-burst'}>{answerFeedback.correct ? '✨' : '×'}</div>
+        </div>
+      )}
       <section className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[1fr_330px]">
         <div>
           <div className="mb-3 grid gap-3 rounded-[1.5rem] bg-white p-4 shadow-soft md:grid-cols-4">

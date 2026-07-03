@@ -16,3 +16,64 @@ button:disabled, fieldset:disabled { opacity: 0.55; cursor: not-allowed; }
 .choice-button { @apply rounded-3xl bg-white p-5 text-4xl font-black shadow-soft ring-4 ring-sora/30 transition hover:-translate-y-1 hover:bg-yuzu/40; }
 .meta { @apply text-xs font-black uppercase tracking-wide text-slate-400; }
 .status-text { @apply mt-1 text-xl font-black; }
+
+.feedback-overlay {
+  @apply pointer-events-none fixed inset-0 z-50 flex items-center justify-center;
+}
+
+.sparkle-burst {
+  @apply relative font-black;
+  font-size: clamp(96px, 18vw, 190px);
+  animation: sparkle-pop 900ms ease-out both;
+  filter: drop-shadow(0 18px 32px rgb(251 191 36 / 0.45));
+}
+
+.sparkle-burst::before,
+.sparkle-burst::after {
+  @apply absolute left-1/2 top-1/2 whitespace-nowrap;
+  content: '✨ ✨ ✨';
+  font-size: 0.42em;
+  transform: translate(-50%, -50%);
+  animation: sparkle-ring 900ms ease-out both;
+}
+
+.sparkle-burst::after {
+  content: '✦ ✨ ✦';
+  animation-delay: 70ms;
+}
+
+.wrong-burst {
+  @apply font-black text-red-500;
+  font-size: clamp(120px, 20vw, 220px);
+  animation: wrong-pop 620ms cubic-bezier(0.2, 1.25, 0.3, 1) both;
+  filter: drop-shadow(0 16px 24px rgb(239 68 68 / 0.28));
+}
+
+@keyframes sparkle-pop {
+  0% { opacity: 0; transform: scale(0.35) rotate(-14deg); }
+  18% { opacity: 1; transform: scale(1.25) rotate(8deg); }
+  62% { opacity: 1; transform: scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.6) rotate(18deg); }
+}
+
+@keyframes sparkle-ring {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(0deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(4.1) rotate(22deg); }
+}
+
+@keyframes wrong-pop {
+  0% { opacity: 0; transform: scale(0.55); }
+  22% { opacity: 1; transform: scale(1.1); }
+  42% { transform: scale(0.96); }
+  100% { opacity: 0; transform: scale(1.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkle-burst,
+  .sparkle-burst::before,
+  .sparkle-burst::after,
+  .wrong-burst {
+    animation-duration: 1ms;
+  }
+}

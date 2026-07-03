@@ -31,9 +31,14 @@ function choiceCount(player, room) {
   return 4;
 }
 
+function readingChoiceText(entry, reading) {
+  const meaning = entry.meaning?.[0] ?? 'meaning unavailable';
+  return `${reading ?? entry.reading?.[0] ?? entry.kanji} (${meaning})`;
+}
+
 function choiceText(entry, promptType) {
-  const values = promptType === 'reading' ? entry.reading : entry.meaning;
-  return values?.[0] ?? entry.kanji;
+  if (promptType === 'reading') return readingChoiceText(entry, entry.reading?.[0]);
+  return entry.meaning?.[0] ?? entry.kanji;
 }
 
 function choicesFor(player, entry, room, promptType, correctChoice) {
@@ -99,7 +104,8 @@ function startTurn(io, room, drawerId) {
   const entry = pick(room.entries);
   const allowed = entry.promptTypes?.length ? entry.promptTypes : ['reading', 'meaning'];
   const promptType = room.settings.promptMode === 'random' ? pick(allowed) : room.settings.promptMode;
-  const prompt = promptType === 'reading' ? pick(entry.reading) : pick(entry.meaning);
+  const rawPrompt = promptType === 'reading' ? pick(entry.reading) : pick(entry.meaning);
+  const prompt = promptType === 'reading' ? readingChoiceText(entry, rawPrompt) : rawPrompt;
   const correctChoice = prompt;
   const nextRound = room.turn ? room.turn.round + 1 : 1;
 
@@ -218,10 +224,14 @@ export function registerGameHandlers(io, socket) {
     const player = room.players.find((p) => p.id === socket.id);
     if (!player || room.turn.firstCorrectId) return;
     room.turn.answered.add(socket.id);
-    if (choice === room.turn.correctChoice) finishTurn(io, room, socket.id);
+    if (choice === room.turn.correctChoice) {
+      socket.emit('answer:result', { correct: true, choice, answer: room.turn.answer, correctChoice: room.turn.correctChoice });
+      finishTurn(io, room, socket.id);
+    }
     else {
       player.wrongCount += 1;
       room.turn.statusMessage = player.name + ', try again!';
+      socket.emit('answer:result', { correct: false, choice, answer: room.turn.answer, correctChoice: room.turn.correctChoice });
       emitRoom(io, room);
     }
   });
