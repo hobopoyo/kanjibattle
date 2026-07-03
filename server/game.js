@@ -2,6 +2,7 @@ import { allKnownEntries, getEntriesForSettings } from './kanji.js';
 
 const rooms = new Map();
 const playerRooms = new Map();
+const maxPlayersPerRoom = 8;
 
 const defaultSettings = {
   mode: 'grade',
@@ -61,6 +62,7 @@ function makeView(room, socketId) {
   const you = room.players.find((p) => p.id === socketId);
   const isDrawer = room.turn?.drawerId === socketId;
   const hintAvailable = room.turn ? room.turn.secondsLeft <= Math.max(0, room.settings.turnSeconds - 10) : false;
+  const answerLocked = room.turn ? room.turn.answered.has(socketId) : false;
   const turn = room.turn ? {
     round: room.turn.round,
     drawerId: room.turn.drawerId,
@@ -71,6 +73,7 @@ function makeView(room, socketId) {
     correctChoice: room.phase === 'turn-reveal' || room.phase === 'results' ? room.turn.correctChoice : undefined,
     statusMessage: room.turn.statusMessage,
     choices: !isDrawer && you ? room.turn.choicesByPlayer[socketId] : undefined,
+    answerLocked,
     secondsLeft: room.turn.secondsLeft
   } : undefined;
 
@@ -176,6 +179,7 @@ export function registerGameHandlers(io, socket) {
     const room = rooms.get(roomCode?.trim().toUpperCase());
     if (!room) return socket.emit('app:error', 'Room not found.');
     if (room.phase !== 'lobby') return socket.emit('app:error', 'This game has already started. Please join the next round.');
+    if (room.players.length >= maxPlayersPerRoom) return socket.emit('app:error', 'This room is full. Up to 8 players can join.');
     const player = { id: socket.id, name: name?.trim() || 'Player', isHost: false, connected: true, score: 0, correctCount: 0, wrongCount: 0, roundsWithoutCorrect: 0 };
     room.players.push(player);
     playerRooms.set(socket.id, room.roomCode);
@@ -223,14 +227,15 @@ export function registerGameHandlers(io, socket) {
     if (!room || !room.turn || room.phase !== 'playing' || room.turn.drawerId === socket.id) return;
     const player = room.players.find((p) => p.id === socket.id);
     if (!player || room.turn.firstCorrectId) return;
-    room.turn.answered.add(socket.id);
+    if (room.turn.answered.has(socket.id)) return socket.emit('answer:locked', { locked: true });
     if (choice === room.turn.correctChoice) {
       socket.emit('answer:result', { correct: true, choice, answer: room.turn.answer, correctChoice: room.turn.correctChoice });
       finishTurn(io, room, socket.id);
     }
     else {
+      room.turn.answered.add(socket.id);
       player.wrongCount += 1;
-      room.turn.statusMessage = player.name + ', try again!';
+      room.turn.statusMessage = player.name + ' is out for this turn.';
       socket.emit('answer:result', { correct: false, choice, answer: room.turn.answer, correctChoice: room.turn.correctChoice });
       emitRoom(io, room);
     }

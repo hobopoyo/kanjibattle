@@ -37,13 +37,17 @@ function playFeedbackSound(correct: boolean) {
     };
 
     if (correct) {
-      play(880, 0, 0.13, 'sine', 0.12);
-      play(1320, 0.14, 0.16, 'sine', 0.1);
+      play(523.25, 0, 0.16, 'sawtooth', 0.09);
+      play(659.25, 0.08, 0.17, 'sawtooth', 0.09);
+      play(783.99, 0.16, 0.2, 'sawtooth', 0.1);
+      play(1046.5, 0.32, 0.34, 'triangle', 0.12);
+      play(1318.51, 0.36, 0.28, 'triangle', 0.08);
     } else {
-      play(180, 0, 0.16, 'square', 0.08);
-      play(120, 0.18, 0.2, 'square', 0.07);
+      play(130, 0, 0.34, 'square', 0.1);
+      play(92, 0.2, 0.36, 'square', 0.09);
+      play(65, 0.36, 0.28, 'sawtooth', 0.07);
     }
-    window.setTimeout(() => void context.close(), 700);
+    window.setTimeout(() => void context.close(), 950);
   } catch {
     // Some browsers block Web Audio until the player interacts. The visual feedback still works.
   }
@@ -130,6 +134,7 @@ export default function App() {
             <p className="mt-3 text-lg font-bold text-slate-600">Room Code</p>
             <div className="mt-2 rounded-3xl bg-sumi p-5 text-center text-5xl font-black tracking-[0.2em] text-white">{view.roomCode}</div>
             <h2 className="mt-6 text-2xl font-black">Players</h2>
+            <p className="mt-1 text-sm font-black text-slate-500">{view.players.length} / 8 players</p>
             <div className="mt-3 grid gap-2">{view.players.map((p) => <div key={p.id} className="rounded-2xl bg-yuzu/30 px-4 py-3 font-black">{p.name}{p.isHost ? ' (Host)' : ''}</div>)}</div>
           </div>
 
@@ -163,6 +168,7 @@ export default function App() {
 
   const answerKind = view.currentTurn?.promptType === 'reading' ? 'reading' : 'English meaning';
   const hintCountdown = Math.max(0, (view.settings.turnSeconds - 10) - (view.currentTurn?.secondsLeft ?? 0));
+  const answerLocked = Boolean(view.currentTurn?.answerLocked);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-sora/25 via-white to-yuzu/30 p-3 text-sumi">
@@ -190,7 +196,8 @@ export default function App() {
 
           {!view.isDrawer && <div className="mb-3 rounded-[1.5rem] bg-sora/20 p-4 text-center text-lg font-black">Look at the handwritten kanji and choose the correct {answerKind}.</div>}
           <DrawingCanvas canDraw={view.isDrawer} phase={view.phase} />
-          {!view.isDrawer && view.currentTurn?.choices && <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">{view.currentTurn.choices.map((choice, index) => <button key={choice} className="choice-button" onClick={() => socket.emit('answer:submit', { choice })}>{String.fromCharCode(65 + index)}. {choice}</button>)}</div>}
+          {!view.isDrawer && view.currentTurn?.choices && <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">{view.currentTurn.choices.map((choice, index) => <button key={choice} className="choice-button" disabled={answerLocked || view.phase !== 'playing'} onClick={() => socket.emit('answer:submit', { choice })}>{String.fromCharCode(65 + index)}. {choice}</button>)}</div>}
+          {!view.isDrawer && answerLocked && view.phase === 'playing' && <div className="mt-4 rounded-3xl bg-red-50 p-5 text-center text-xl font-black text-red-600 shadow-soft">You missed this one. Wait until another player answers correctly.</div>}
           {view.currentTurn?.answer && !view.isDrawer && view.phase === 'turn-reveal' && <div className="mt-4 rounded-3xl bg-white p-5 text-center text-3xl font-black shadow-soft">Answer: {view.currentTurn.answer}<span className="block text-xl text-slate-600">{answerKind}: {view.currentTurn.correctChoice}</span></div>}
         </div>
         <aside className="panel h-fit">

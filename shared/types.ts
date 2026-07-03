@@ -51,6 +51,7 @@ export interface PublicTurn {
   correctChoice?: string;
   statusMessage: string;
   choices?: string[];
+  answerLocked?: boolean;
   secondsLeft: number;
 }
 

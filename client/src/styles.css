@@ -14,6 +14,8 @@ button:disabled, fieldset:disabled { opacity: 0.55; cursor: not-allowed; }
 .tool-button { @apply rounded-2xl bg-slate-100 px-4 py-2 font-black text-slate-700 transition hover:bg-yuzu/50 disabled:hover:bg-slate-100; }
 .tool-active { @apply bg-sakura text-white hover:bg-sakura; }
 .choice-button { @apply rounded-3xl bg-white p-5 text-4xl font-black shadow-soft ring-4 ring-sora/30 transition hover:-translate-y-1 hover:bg-yuzu/40; }
+.choice-button:disabled { @apply cursor-not-allowed opacity-50 ring-slate-200; transform: none; }
+.choice-button:disabled:hover { @apply bg-white; transform: none; }
 .meta { @apply text-xs font-black uppercase tracking-wide text-slate-400; }
 .status-text { @apply mt-1 text-xl font-black; }
 
