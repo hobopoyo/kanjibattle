@@ -14,5 +14,41 @@
     {"kanji":"夏","reading":["なつ","カ"],"meaning":["summer"],"grade":2,"onyomi":["カ"],"kunyomi":["なつ"],"promptTypes":["reading","meaning"],"distractors":["春","秋","冬","夜"]},
     {"kanji":"行","reading":["いく","コウ"],"meaning":["go"],"grade":2,"onyomi":["コウ"],"kunyomi":["いく"],"promptTypes":["reading","meaning"],"distractors":["来","帰","走","歩"]}
   ],
-  "grade3": [], "grade4": [], "grade5": [], "grade6": [], "juniorHigh": [], "advanced": [], "custom": []
+  "grade3": [], "grade4": [], "grade5": [], "grade6": [], "juniorHigh": [], "advanced": [],
+  "jlptN5": [
+    {"kanji":"日","reading":["ひ","ニチ"],"meaning":["sun","day"],"grade":"JLPT N5","onyomi":["ニチ"],"kunyomi":["ひ"],"promptTypes":["reading","meaning"],"distractors":["月","火","水","木"]},
+    {"kanji":"月","reading":["つき","ゲツ"],"meaning":["moon","month"],"grade":"JLPT N5","onyomi":["ゲツ"],"kunyomi":["つき"],"promptTypes":["reading","meaning"],"distractors":["日","火","水","金"]},
+    {"kanji":"火","reading":["ひ","カ"],"meaning":["fire","Tuesday"],"grade":"JLPT N5","onyomi":["カ"],"kunyomi":["ひ"],"promptTypes":["reading","meaning"],"distractors":["水","木","金","土"]},
+    {"kanji":"水","reading":["みず","スイ"],"meaning":["water","Wednesday"],"grade":"JLPT N5","onyomi":["スイ"],"kunyomi":["みず"],"promptTypes":["reading","meaning"],"distractors":["火","木","金","土"]},
+    {"kanji":"人","reading":["ひと","ジン"],"meaning":["person"],"grade":"JLPT N5","onyomi":["ジン"],"kunyomi":["ひと"],"promptTypes":["reading","meaning"],"distractors":["大","小","子","女"]}
+  ],
+  "jlptN4": [
+    {"kanji":"会","reading":["あう","カイ"],"meaning":["meet","association"],"grade":"JLPT N4","onyomi":["カイ"],"kunyomi":["あう"],"promptTypes":["reading","meaning"],"distractors":["社","店","駅","電"]},
+    {"kanji":"社","reading":["やしろ","シャ"],"meaning":["company","shrine"],"grade":"JLPT N4","onyomi":["シャ"],"kunyomi":["やしろ"],"promptTypes":["reading","meaning"],"distractors":["会","店","駅","車"]},
+    {"kanji":"駅","reading":["えき"],"meaning":["station"],"grade":"JLPT N4","onyomi":["エキ"],"kunyomi":[],"promptTypes":["reading","meaning"],"distractors":["店","車","電","道"]},
+    {"kanji":"読","reading":["よむ","ドク"],"meaning":["read"],"grade":"JLPT N4","onyomi":["ドク"],"kunyomi":["よむ"],"promptTypes":["reading","meaning"],"distractors":["書","聞","話","買"]},
+    {"kanji":"書","reading":["かく","ショ"],"meaning":["write"],"grade":"JLPT N4","onyomi":["ショ"],"kunyomi":["かく"],"promptTypes":["reading","meaning"],"distractors":["読","聞","話","売"]}
+  ],
+  "jlptN3": [
+    {"kanji":"習","reading":["ならう","シュウ"],"meaning":["learn","practice"],"grade":"JLPT N3","onyomi":["シュウ"],"kunyomi":["ならう"],"promptTypes":["reading","meaning"],"distractors":["質","問","答","旅"]},
+    {"kanji":"質","reading":["シツ"],"meaning":["quality","question"],"grade":"JLPT N3","onyomi":["シツ"],"kunyomi":[],"promptTypes":["reading","meaning"],"distractors":["問","答","意","味"]},
+    {"kanji":"問","reading":["とう","モン"],"meaning":["question","ask"],"grade":"JLPT N3","onyomi":["モン"],"kunyomi":["とう"],"promptTypes":["reading","meaning"],"distractors":["答","質","題","談"]},
+    {"kanji":"答","reading":["こたえ","トウ"],"meaning":["answer"],"grade":"JLPT N3","onyomi":["トウ"],"kunyomi":["こたえ"],"promptTypes":["reading","meaning"],"distractors":["問","質","説","話"]},
+    {"kanji":"味","reading":["あじ","ミ"],"meaning":["taste","meaning"],"grade":"JLPT N3","onyomi":["ミ"],"kunyomi":["あじ"],"promptTypes":["reading","meaning"],"distractors":["意","料","理","香"]}
+  ],
+  "jlptN2": [
+    {"kanji":"環","reading":["カン"],"meaning":["ring","environment"],"grade":"JLPT N2","onyomi":["カン"],"kunyomi":[],"promptTypes":["reading","meaning"],"distractors":["境","資","源","政"]},
+    {"kanji":"境","reading":["さかい","キョウ"],"meaning":["boundary","environment"],"grade":"JLPT N2","onyomi":["キョウ"],"kunyomi":["さかい"],"promptTypes":["reading","meaning"],"distractors":["環","資","源","済"]},
+    {"kanji":"資","reading":["シ"],"meaning":["resources","capital"],"grade":"JLPT N2","onyomi":["シ"],"kunyomi":[],"promptTypes":["reading","meaning"],"distractors":["源","経","済","術"]},
+    {"kanji":"経","reading":["ケイ"],"meaning":["manage","pass through"],"grade":"JLPT N2","onyomi":["ケイ"],"kunyomi":[],"promptTypes":["reading","meaning"],"distractors":["済","政","技","術"]},
+    {"kanji":"技","reading":["わざ","ギ"],"meaning":["skill","technique"],"grade":"JLPT N2","onyomi":["ギ"],"kunyomi":["わざ"],"promptTypes":["reading","meaning"],"distractors":["術","能","芸","工"]}
+  ],
+  "jlptN1": [
+    {"kanji":"曖","reading":["アイ"],"meaning":["unclear","dim"],"grade":"JLPT N1","onyomi":["アイ"],"kunyomi":[],"promptTypes":["reading","meaning"],"distractors":["昧","憂","慮","謙"]},
+    {"kanji":"昧","reading":["マイ"],"meaning":["obscure","dark"],"grade":"JLPT N1","onyomi":["マイ"],"kunyomi":[],"promptTypes":["reading","meaning"],"distractors":["曖","憂","慮","抽"]},
+    {"kanji":"憂","reading":["うれえる","ユウ"],"meaning":["anxiety","worry"],"grade":"JLPT N1","onyomi":["ユウ"],"kunyomi":["うれえる"],"promptTypes":["reading","meaning"],"distractors":["慮","謙","遜","促"]},
+    {"kanji":"慮","reading":["リョ"],"meaning":["consideration","concern"],"grade":"JLPT N1","onyomi":["リョ"],"kunyomi":[],"promptTypes":["reading","meaning"],"distractors":["憂","謙","遜","進"]},
+    {"kanji":"謙","reading":["ケン"],"meaning":["modesty","humble"],"grade":"JLPT N1","onyomi":["ケン"],"kunyomi":[],"promptTypes":["reading","meaning"],"distractors":["遜","抽","象","促"]}
+  ],
+  "custom": []
 }

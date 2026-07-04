@@ -4,7 +4,7 @@ import DrawingCanvas from './DrawingCanvas';
 import { socket } from './socket';
 
 type AnswerFeedback = { correct: boolean; nonce: number } | null;
-type MascotPopup = { id: number; src: string; left: number; top: number; size: number; flip: boolean; delay: number };
+type MascotPopup = { id: number; src: string; left: number; top: number; size: number; flip: boolean; delay: number; rotate: number; ring: string };
 
 const grades: Array<{ value: GradeKey; label: string }> = [
   { value: 'grade1', label: 'Grade 1' },
@@ -14,7 +14,12 @@ const grades: Array<{ value: GradeKey; label: string }> = [
   { value: 'grade5', label: 'Grade 5' },
   { value: 'grade6', label: 'Grade 6' },
   { value: 'juniorHigh', label: 'Junior High and above' },
-  { value: 'advanced', label: 'AP Japanese / Advanced Learners' }
+  { value: 'advanced', label: 'AP Japanese / Advanced Learners' },
+  { value: 'jlptN5', label: 'JLPT N5' },
+  { value: 'jlptN4', label: 'JLPT N4' },
+  { value: 'jlptN3', label: 'JLPT N3' },
+  { value: 'jlptN2', label: 'JLPT N2' },
+  { value: 'jlptN1', label: 'JLPT N1' }
 ];
 
 const mascotImages = [
@@ -23,18 +28,36 @@ const mascotImages = [
   '/mascots/mascot-chibi-blue.png',
   '/mascots/mascot-chibi-white.png',
   '/mascots/mascot-chibi-cream.png',
-  '/mascots/mascot-portrait-blonde.png'
+  '/mascots/mascot-portrait-blonde.png',
+  '/mascots/mascot-chibi-puff.png',
+  '/mascots/mascot-chibi-coat.png',
+  '/mascots/mascot-chibi-stand.png',
+  '/mascots/mascot-chibi-whitecoat.png',
+  '/mascots/mascot-chibi-formal.png',
+  '/mascots/mascot-chibi-orange.png',
+  '/mascots/mascot-chibi-pink.png'
+];
+
+const mascotZones = [
+  { left: [7, 17], top: [18, 70] },
+  { left: [83, 93], top: [18, 70] },
+  { left: [16, 30], top: [78, 88] },
+  { left: [70, 84], top: [78, 88] }
 ];
 
 function randomMascot(id: number): MascotPopup {
+  const zone = mascotZones[Math.floor(Math.random() * mascotZones.length)];
+  const ringColors = ['#ffffff', '#facc15', '#38bdf8', '#fb7185', '#a7f3d0', '#c4b5fd'];
   return {
     id,
     src: mascotImages[Math.floor(Math.random() * mascotImages.length)],
-    left: 4 + Math.random() * 82,
-    top: 8 + Math.random() * 72,
-    size: 78 + Math.random() * 54,
+    left: zone.left[0] + Math.random() * (zone.left[1] - zone.left[0]),
+    top: zone.top[0] + Math.random() * (zone.top[1] - zone.top[0]),
+    size: 68 + Math.random() * 46,
     flip: Math.random() > 0.5,
-    delay: Math.random() * 0.35
+    delay: Math.random() * 0.35,
+    rotate: -10 + Math.random() * 20,
+    ring: ringColors[Math.floor(Math.random() * ringColors.length)]
   };
 }
 
@@ -46,14 +69,14 @@ function MascotPopups() {
     const showMascot = () => {
       const id = nextId;
       nextId += 1;
-      setPopups((current) => [...current.slice(-2), randomMascot(id)]);
+      setPopups((current) => [...current.slice(-1), randomMascot(id)]);
       window.setTimeout(() => {
         setPopups((current) => current.filter((popup) => popup.id !== id));
       }, 6200);
     };
 
-    const firstTimer = window.setTimeout(showMascot, 900);
-    const interval = window.setInterval(showMascot, 5200);
+    const firstTimer = window.setTimeout(showMascot, 4200);
+    const interval = window.setInterval(showMascot, 20000);
     return () => {
       window.clearTimeout(firstTimer);
       window.clearInterval(interval);
@@ -73,11 +96,63 @@ function MascotPopups() {
             top: `${popup.top}%`,
             width: `${popup.size}px`,
             animationDelay: `${popup.delay}s`,
-            ['--mascot-flip' as string]: popup.flip ? -1 : 1
+            ['--mascot-flip' as string]: popup.flip ? -1 : 1,
+            ['--mascot-rotate' as string]: `${popup.rotate}deg`,
+            ['--mascot-ring' as string]: popup.ring
           }}
         />
       ))}
     </div>
+  );
+}
+
+function RulesPage({ onBack }: { onBack: () => void }) {
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-yuzu/45 via-white to-sora/40 p-4 text-sumi">
+      <MascotPopups />
+      <section className="mx-auto max-w-5xl py-6">
+        <button className="tool-button mb-5" onClick={onBack}>Back</button>
+        <div className="panel">
+          <p className="text-lg font-black text-sakura">How to play</p>
+          <h1 className="mt-2 text-4xl font-black md:text-6xl">Kanji Draw Battle Rules</h1>
+          <p className="mt-4 text-lg font-bold leading-8 text-slate-600">Kanji Draw Battle is a real-time classroom game. One player writes a kanji by hand, and the other players guess the matching reading or English meaning from multiple choices.</p>
+        </div>
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="panel">
+            <h2 className="text-2xl font-black">1. Room Setup</h2>
+            <p className="mt-3 font-bold leading-7 text-slate-600">The host creates a room and shares the room code, direct link, or QR code. Up to 8 players can join. When the room is full, the game starts automatically.</p>
+          </div>
+          <div className="panel">
+            <h2 className="text-2xl font-black">2. Game Modes</h2>
+            <p className="mt-3 font-bold leading-7 text-slate-600">The host can choose grade-level kanji, JLPT N5-N1 kanji, a custom teacher list, or a short review mode for today&apos;s lesson.</p>
+          </div>
+          <div className="panel">
+            <h2 className="text-2xl font-black">3. Drawer Turn</h2>
+            <p className="mt-3 font-bold leading-7 text-slate-600">The drawer sees a reading or English meaning and writes the matching kanji on the canvas. The exact kanji hint appears only after 10 seconds.</p>
+          </div>
+          <div className="panel">
+            <h2 className="text-2xl font-black">4. Guessing</h2>
+            <p className="mt-3 font-bold leading-7 text-slate-600">Guessers cannot see the drawer&apos;s prompt. They choose the correct reading or English meaning from the answer buttons. A wrong answer locks that player out for the rest of the turn.</p>
+          </div>
+          <div className="panel">
+            <h2 className="text-2xl font-black">5. Scoring</h2>
+            <p className="mt-3 font-bold leading-7 text-slate-600">Only the first correct guesser gets 1 point. The drawer also gets 1 point when someone guesses correctly. Later correct answers in the same turn do not score.</p>
+          </div>
+          <div className="panel">
+            <h2 className="text-2xl font-black">6. Next Turn</h2>
+            <p className="mt-3 font-bold leading-7 text-slate-600">The host can use winner-next mode or order mode. If every guesser answers incorrectly, the turn ends immediately. In a 2-player game, the same drawer may continue when the only guesser misses.</p>
+          </div>
+          <div className="panel">
+            <h2 className="text-2xl font-black">7. Rescue Rule</h2>
+            <p className="mt-3 font-bold leading-7 text-slate-600">Players with low scores get fewer choices. A 0-point player gets 3 choices, and a player who has missed several rounds may get 2 choices. The correct answer is always included.</p>
+          </div>
+          <div className="panel">
+            <h2 className="text-2xl font-black">8. Results</h2>
+            <p className="mt-3 font-bold leading-7 text-slate-600">After the round limit is reached, the app shows rankings, scores, and correct counts. The host can return everyone to the lobby and play again.</p>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
 
@@ -126,6 +201,7 @@ export default function App() {
   const [answerFeedback, setAnswerFeedback] = useState<AnswerFeedback>(null);
   const [copyStatus, setCopyStatus] = useState('');
   const [joinNameStep, setJoinNameStep] = useState(false);
+  const [showRules, setShowRules] = useState(() => window.location.hash === '#rules');
 
   useEffect(() => {
     const invitedRoom = new URLSearchParams(window.location.search).get('room');
@@ -183,8 +259,18 @@ export default function App() {
     setJoinNameStep(true);
   };
   const submitJoin = () => socket.emit('room:join', { name, roomCode: roomCodeInput });
+  const openRules = () => {
+    setShowRules(true);
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#rules`);
+  };
+  const closeRules = () => {
+    setShowRules(false);
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  };
 
   if (!view) {
+    if (showRules) return <RulesPage onBack={closeRules} />;
+
     return (
       <main className="min-h-screen bg-gradient-to-br from-yuzu/50 via-white to-sora/40 p-4 text-sumi">
         <MascotPopups />
@@ -193,7 +279,7 @@ export default function App() {
             <div className="flex flex-col justify-center">
               <p className="text-lg font-black text-sakura">Real-time kanji learning battle</p>
               <h1 className="mt-3 text-5xl font-black leading-tight md:text-7xl">Kanji Draw Battle</h1>
-              <p className="mt-5 text-lg font-bold leading-8 text-slate-600">One player sees a reading or English meaning, writes the matching kanji, and everyone else chooses the correct reading or meaning.</p>
+              <p className="mt-5 text-lg font-bold leading-8 text-slate-600">One player sees a reading or English meaning, writes the matching kanji, and everyone else chooses the correct reading or meaning. <button className="read-more-link" onClick={openRules}>Read more...</button></p>
             </div>
             <div className="rounded-[1.5rem] bg-sora/20 p-5">
               {!joinNameStep ? <>
