@@ -14,7 +14,9 @@ main > section { @apply relative z-20; }
 .secondary-button { @apply rounded-2xl bg-sumi px-6 py-4 text-xl font-black text-white shadow-soft transition hover:-translate-y-0.5; }
 .tool-button { @apply rounded-2xl bg-slate-100 px-4 py-2 font-black text-slate-700 transition hover:bg-yuzu/50 disabled:hover:bg-slate-100; }
 .tool-active { @apply bg-sakura text-white hover:bg-sakura; }
-.choice-button { @apply rounded-3xl bg-white p-5 text-4xl font-black shadow-soft ring-4 ring-sora/30 transition hover:-translate-y-1 hover:bg-yuzu/40; }
+.choice-button { @apply flex min-h-28 items-start gap-2 rounded-3xl bg-white p-4 text-left font-black leading-tight shadow-soft ring-4 ring-sora/30 transition hover:-translate-y-1 hover:bg-yuzu/40; font-size: clamp(0.82rem, 1.55vw, 1.85rem); overflow-wrap: anywhere; word-break: break-word; }
+.choice-prefix { @apply shrink-0 text-sakura; }
+.choice-text { @apply min-w-0 flex-1; hyphens: auto; }
 .choice-button:disabled { @apply cursor-not-allowed opacity-50 ring-slate-200; transform: none; }
 .choice-button:disabled:hover { @apply bg-white; transform: none; }
 .meta { @apply text-xs font-black uppercase tracking-wide text-slate-400; }

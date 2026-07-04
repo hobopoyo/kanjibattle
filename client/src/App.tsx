@@ -193,6 +193,35 @@ function playFeedbackSound(correct: boolean) {
   }
 }
 
+async function writeClipboardText(text: string) {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall back to the textarea method below.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  textarea.style.top = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  try {
+    return document.execCommand('copy');
+  } catch {
+    return false;
+  } finally {
+    document.body.removeChild(textarea);
+  }
+}
+
 export default function App() {
   const [name, setName] = useState('');
   const [roomCodeInput, setRoomCodeInput] = useState('');
@@ -202,10 +231,16 @@ export default function App() {
   const [copyStatus, setCopyStatus] = useState('');
   const [joinNameStep, setJoinNameStep] = useState(false);
   const [showRules, setShowRules] = useState(() => window.location.hash === '#rules');
+  const [inviteRoomCode, setInviteRoomCode] = useState('');
 
   useEffect(() => {
     const invitedRoom = new URLSearchParams(window.location.search).get('room');
-    if (invitedRoom) setRoomCodeInput(invitedRoom.toUpperCase());
+    if (invitedRoom) {
+      const normalizedRoom = invitedRoom.toUpperCase();
+      setInviteRoomCode(normalizedRoom);
+      setRoomCodeInput(normalizedRoom);
+      setJoinNameStep(true);
+    }
 
     const onAnswerResult = (payload: { correct: boolean }) => {
       setAnswerFeedback({ correct: payload.correct, nonce: Date.now() });
@@ -231,10 +266,11 @@ export default function App() {
   const twitterShareUrl = inviteLink ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(inviteLink)}` : '';
   const copyInviteLink = async () => {
     if (!inviteLink) return;
-    try {
-      await navigator.clipboard.writeText(inviteLink);
+    const copied = await writeClipboardText(inviteLink);
+    if (copied) {
       setCopyStatus('Link copied!');
-    } catch {
+      window.setTimeout(() => setCopyStatus(''), 2200);
+    } else {
       setCopyStatus(inviteLink);
     }
   };
@@ -258,7 +294,7 @@ export default function App() {
     setError('');
     setJoinNameStep(true);
   };
-  const submitJoin = () => socket.emit('room:join', { name, roomCode: roomCodeInput });
+  const submitJoin = () => socket.emit('room:join', { name, roomCode: roomCodeInput.trim().toUpperCase() });
   const openRules = () => {
     setShowRules(true);
     window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#rules`);
@@ -282,7 +318,7 @@ export default function App() {
               <p className="mt-5 text-lg font-bold leading-8 text-slate-600">One player sees a reading or English meaning, writes the matching kanji, and everyone else chooses the correct reading or meaning. <button className="read-more-link" onClick={openRules}>Read more...</button></p>
             </div>
             <div className="rounded-[1.5rem] bg-sora/20 p-5">
-              {!joinNameStep ? <>
+              {!joinNameStep && !inviteRoomCode ? <>
                 <label className="label">Name for hosting</label>
                 <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Example: Aoi" />
                 <button className="primary-button mt-4 w-full" onClick={() => socket.emit('room:create', { name })}>Create Room</button>
@@ -291,11 +327,12 @@ export default function App() {
                 <input className="input uppercase" value={roomCodeInput} onChange={(e) => { setRoomCodeInput(e.target.value.toUpperCase()); setJoinNameStep(false); }} placeholder="ABCDE" />
                 <button className="secondary-button mt-4 w-full" onClick={prepareJoin}>Join Room</button>
               </> : <>
+                <p className="text-center text-lg font-black text-sakura">Join Room</p>
                 <p className="rounded-2xl bg-white p-3 text-center text-xl font-black tracking-[0.12em] text-sumi">{roomCodeInput}</p>
                 <label className="label mt-5">Your Name</label>
                 <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Example: Aoi" autoFocus />
                 <button className="primary-button mt-4 w-full" onClick={submitJoin}>Enter Room</button>
-                <button className="tool-button mt-3 w-full" onClick={() => setJoinNameStep(false)}>Change Room Code</button>
+                {!inviteRoomCode && <button className="tool-button mt-3 w-full" onClick={() => setJoinNameStep(false)}>Change Room Code</button>}
               </>}
               {error && <p className="mt-4 rounded-xl bg-red-100 p-3 font-bold text-red-700">{error}</p>}
             </div>
@@ -415,7 +452,7 @@ export default function App() {
 
           {!view.isDrawer && <div className="mb-3 rounded-[1.5rem] bg-sora/20 p-4 text-center text-lg font-black">Look at the handwritten kanji and choose the correct {answerKind}.</div>}
           <DrawingCanvas canDraw={view.isDrawer} phase={view.phase} />
-          {!view.isDrawer && view.currentTurn?.choices && <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">{view.currentTurn.choices.map((choice, index) => <button key={choice} className="choice-button" disabled={answerLocked || view.phase !== 'playing'} onClick={() => socket.emit('answer:submit', { choice })}>{String.fromCharCode(65 + index)}. {choice}</button>)}</div>}
+          {!view.isDrawer && view.currentTurn?.choices && <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">{view.currentTurn.choices.map((choice, index) => <button key={choice} className="choice-button" disabled={answerLocked || view.phase !== 'playing'} onClick={() => socket.emit('answer:submit', { choice })}><span className="choice-prefix">{String.fromCharCode(65 + index)}.</span><span className="choice-text">{choice}</span></button>)}</div>}
           {!view.isDrawer && answerLocked && view.phase === 'playing' && <div className="mt-4 rounded-3xl bg-red-50 p-5 text-center text-xl font-black text-red-600 shadow-soft">You missed this one. Wait until another player answers correctly.</div>}
           {view.currentTurn?.answer && !view.isDrawer && view.phase === 'turn-reveal' && <div className="mt-4 rounded-3xl bg-white p-5 text-center text-3xl font-black shadow-soft">Answer: {view.currentTurn.answer}<span className="block text-xl text-slate-600">{answerKind}: {view.currentTurn.correctChoice}</span></div>}
         </div>
