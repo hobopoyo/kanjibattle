@@ -12,6 +12,7 @@ export interface KanjiEntry {
   grade: number | string;
   onyomi: string[];
   kunyomi: string[];
+  readingHints?: Record<string, string>;
   promptTypes: Array<'reading' | 'meaning'>;
   distractors: string[];
 }

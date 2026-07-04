@@ -22,8 +22,23 @@ function code() {
   return rooms.has(out) ? code() : out;
 }
 
-function shuffle(items) { return [...items].sort(() => Math.random() - 0.5); }
-function pick(items) { return items[Math.floor(Math.random() * items.length)]; }
+function randomIndex(items, label = 'item') {
+  if (!items.length) return 0;
+  const randomValue = Math.random();
+  const index = Math.min(items.length - 1, Math.floor(randomValue * items.length));
+  return index;
+}
+
+function shuffle(items) {
+  return [...items]
+    .map((item) => ({ item, randomValue: Math.random() }))
+    .sort((a, b) => a.randomValue - b.randomValue)
+    .map(({ item }) => item);
+}
+
+function pick(items, label) {
+  return items[randomIndex(items, label)];
+}
 
 function choiceCount(player, room) {
   if (!room.settings.rescueEnabled) return 4;
@@ -34,7 +49,9 @@ function choiceCount(player, room) {
 
 function readingChoiceText(entry, reading) {
   const meaning = entry.meaning?.[0] ?? 'meaning unavailable';
-  return `${reading ?? entry.reading?.[0] ?? entry.kanji} (${meaning})`;
+  const baseReading = reading ?? entry.reading?.[0] ?? entry.kanji;
+  const displayReading = entry.readingHints?.[baseReading] ?? baseReading;
+  return `${displayReading} (${meaning})`;
 }
 
 function choiceText(entry, promptType) {
@@ -104,10 +121,10 @@ function startTurn(io, room, drawerId) {
   if (room.entries.length === 0 || room.players.length === 0) return;
   if (drawerId) room.drawerIndex = Math.max(0, room.players.findIndex((p) => p.id === drawerId));
   const drawer = room.players[room.drawerIndex % room.players.length];
-  const entry = pick(room.entries);
+  const entry = pick(room.entries, 'kanji');
   const allowed = entry.promptTypes?.length ? entry.promptTypes : ['reading', 'meaning'];
-  const promptType = room.settings.promptMode === 'random' ? pick(allowed) : room.settings.promptMode;
-  const rawPrompt = promptType === 'reading' ? pick(entry.reading) : pick(entry.meaning);
+  const promptType = room.settings.promptMode === 'random' ? pick(allowed, 'promptType') : room.settings.promptMode;
+  const rawPrompt = promptType === 'reading' ? pick(entry.reading, 'reading') : pick(entry.meaning, 'meaning');
   const prompt = promptType === 'reading' ? readingChoiceText(entry, rawPrompt) : rawPrompt;
   const correctChoice = prompt;
   const nextRound = room.turn ? room.turn.round + 1 : 1;
