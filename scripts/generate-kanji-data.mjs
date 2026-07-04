@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const dataPath = path.join(process.cwd(), 'server', 'data', 'kanjiData.json');
+const sourceListPath = path.join(process.cwd(), 'server', 'data', 'sourceKanjiLists.json');
 const existing = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+const sourceLists = fs.existsSync(sourceListPath) ? JSON.parse(fs.readFileSync(sourceListPath, 'utf8')) : {};
 
 const gradeKeys = ['grade1', 'grade2', 'grade3', 'grade4', 'grade5', 'grade6'];
 
@@ -72,6 +74,24 @@ for (const [index, gradeKey] of gradeKeys.entries()) {
   for (const kanji of kanjiList) entries.push(await getApiEntry(kanji, gradeNumber));
   existing[gradeKey] = withDistractors(entries);
   console.log(`${gradeKey}: ${entries.length}`);
+}
+
+{
+  const kanjiList = await getGradeKanji(8);
+  const entries = [];
+  for (const kanji of kanjiList) entries.push(await getApiEntry(kanji, 'Junior High and above'));
+  existing.juniorHigh = withDistractors(entries);
+  console.log(`juniorHigh: ${entries.length}`);
+}
+
+for (const key of ['jlptN5', 'jlptN4', 'jlptN3', 'jlptN2', 'jlptN1', 'advanced']) {
+  const source = sourceLists[key]?.kanji ?? '';
+  if (!source) continue;
+  const label = key === 'advanced' ? 'AP Japanese' : key.replace('jlpt', 'JLPT ');
+  const entries = [];
+  for (const kanji of [...source]) entries.push(await getApiEntry(kanji, label));
+  existing[key] = withDistractors(entries);
+  console.log(`${key}: ${entries.length}`);
 }
 
 fs.writeFileSync(dataPath, `${JSON.stringify(existing, null, 2)}\n`, 'utf8');
